@@ -1,4 +1,5 @@
 const moment = require('moment');
+const axios = require('axios');
 const conexao = require('../infraestrutura/conexao');
 const validacoes = require('../utils/validacoes');
 
@@ -18,11 +19,21 @@ class Atendimentos {
     bucarPorId(id, res) {
         const sql = `SELECT * FROM tb_atendimentos WHERE id = ${id}`;
 
-        conexao.query(sql, (erro, resultado) => {
+        conexao.query(sql, async (erro, resultado) => {
+            const atendimento = resultado[0];
+            
             if (erro) {
                 res.status(400).json(erro);
             } else {
-                res.status(200).json(resultado);
+                try {
+                    const { data } = await axios.get(`http://localhost:8082/${atendimento.cliente}`);
+
+                    atendimento.cliente = data;
+
+                    res.status(200).json(atendimento);
+                } catch (error) {
+                    res.status(500).json({mensagemUsuario: "Serviço indisponivel no momento. Por favor tente novamente mais tarde."});
+                }
             }
         });
     }
