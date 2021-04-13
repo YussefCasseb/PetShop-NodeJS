@@ -12,8 +12,6 @@ class Tabelas {
         this.conexao.query(sql, (erro) => {
             if (erro) {
                 console.log(erro);
-            } else {
-                console.log('Tabela tb_atendimentos criada com sucesso!');
             }
         });
     }
@@ -24,8 +22,6 @@ class Tabelas {
         this.conexao.query(sql, (erro) => {
             if (erro) {
                 console.log(erro);
-            } else {
-                console.log('Tabela tb_pets criada com sucesso!');
             }
         });
     }

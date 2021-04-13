@@ -1,7 +1,9 @@
 const moment = require('moment');
 
 class Validacoes {
-    validarCampos(atendimento) {
+    validarCamposAtendimento(atendimento) {
+        const dataCriacao = moment().format('YYYY-MM-DD HH:mm:ss');
+
         const validacoes = [
             {
                 campo: 'cliente',
@@ -10,22 +12,12 @@ class Validacoes {
             },
             {
                 campo: 'dataAgendamento',
-                valido: this.validarDataAgendamento(atendimento.dataAgendamento),
+                valido: atendimento.dataAgendamento ? moment(atendimento.dataAgendamento).isSameOrAfter(dataCriacao) : true,
                 mensagem: 'A data e o horário do Agendamento devem ser iguais ou posteriores a data e horário atual.'
             }
         ];
 
         return validacoes.filter(validacao => !validacao.valido);
-    }
-
-    validarDataAgendamento(dataAgendamento) {
-        const dataCriacao = moment().format('YYYY-MM-DD hh:mm:ss');
-
-        if (dataAgendamento) {
-            return moment(dataAgendamento).isSameOrAfter(dataCriacao);
-        }
-
-        return true;
     }
 }
 

@@ -1,6 +1,6 @@
 const customExpress = require('./config/customExpress');
-const conexao = require('./infraestrutura/conexao');
-const tabelas = require('./infraestrutura/tabelas');
+const conexao = require('./database/conexao');
+const tabelas = require('./database/tabelas');
 
 conexao.connect(erro => {
     if (erro) {
@@ -10,6 +10,6 @@ conexao.connect(erro => {
         
         const app = customExpress();
 
-        app.listen(3000, () => console.log('APIs ativas'));
+        app.listen(3000);
     }
 });

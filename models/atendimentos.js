@@ -1,102 +1,70 @@
 const moment = require('moment');
 const axios = require('axios');
-const conexao = require('../infraestrutura/conexao');
 const validacoes = require('../utils/validacoes');
+const atendimentoRepository = require('../repositories/atendimentos');
 
 class Atendimentos {
-    listarTodos(res) {
-        const sql = 'SELECT * FROM tb_atendimentos';
-
-        conexao.query(sql, (erro, resultado) => {
-            if (erro) {
-                res.status(400).json(erro);
-            } else {
-                res.status(200).json(resultado);
-            }
-        });
+    listarTodos() {
+        return atendimentoRepository.listarTodos();
     }
 
-    bucarPorId(id, res) {
-        const sql = `SELECT * FROM tb_atendimentos WHERE id = ${id}`;
-
-        conexao.query(sql, async (erro, resultado) => {
-            const atendimento = resultado[0];
-            
-            if (erro) {
-                res.status(400).json(erro);
-            } else {
+    bucarPorId(id) {
+        return atendimentoRepository.buscarPorId(id)
+            .then(async (resultado) => {
+                const atendimento = resultado[0];
+                
                 try {
                     const { data } = await axios.get(`http://localhost:8082/${atendimento.cliente}`);
 
                     atendimento.cliente = data;
 
-                    res.status(200).json(atendimento);
-                } catch (error) {
-                    res.status(500).json({mensagemUsuario: "Serviço indisponivel no momento. Por favor tente novamente mais tarde."});
+                    return atendimento;
+                } catch (erros) {
+                    return new Promise((resolve, reject) => reject({mensagemUsuario: "Serviço indisponivel no momento. Por favor tente novamente mais tarde."}));
                 }
-            }
-        });
+            });
     }
 
-    adicionar(atendimento, res) {
-        const dataCriacao = moment().format('YYYY-MM-DD hh:mm:ss');
-        const dataAgendamento = moment(atendimento.dataAgendamento, 'DD/MM/YYYY hh:mm:ss').format('YYYY-MM-DD hh:mm:ss');
+    adicionar(atendimento) {
+        const dataCriacao = moment().format('YYYY-MM-DD HH:mm:ss');
+        const dataAgendamento = moment(atendimento.dataAgendamento, 'DD/MM/YYYY HH:mm:ss').format('YYYY-MM-DD HH:mm:ss');
 
         const atendimentoDatado = {...atendimento, dataAgendamento, dataCriacao};
 
-        const erros = validacoes.validarCampos(atendimentoDatado);
+        const erros = validacoes.validarCamposAtendimento(atendimentoDatado);
 
         if (erros.length) {
-            res.status(400).json(erros);
+            return new Promise((resolve, reject) => reject(erros));
         } else {
-            const sql = 'INSERT INTO tb_atendimentos SET ?';
+            return atendimentoRepository.adicionar(atendimentoDatado)
+                .then((resultados) => {
+                    const id = resultados.insertId;
 
-            conexao.query(sql, atendimentoDatado, (erro) => {
-                if (erro) {
-                    res.status(400).json(erro);
-                } else {
-                    res.status(201).json(atendimentoDatado);
-                }
-            });
+                    return ({id, ...atendimentoDatado});
+                });
         }
     }
 
-    atualizar(id, valores, res) {
+    atualizar(id, valores) {
         let atendimento = {...valores};
 
         if (atendimento.dataAgendamento) {
-            const dataAgendamento = moment(atendimento.dataAgendamento, 'DD/MM/YYYY hh:mm:ss').format('YYYY-MM-DD hh:mm:ss');
+            const dataAgendamento = moment(atendimento.dataAgendamento, 'DD/MM/YYYY HH:mm:ss').format('YYYY-MM-DD HH:mm:ss');
 
             atendimento = {...valores, dataAgendamento}
         }
 
-        const erros = validacoes.validarCampos(atendimento);
+        const erros = validacoes.validarCamposAtendimento(atendimento);
 
         if (erros.length) {
-            res.status(400).json(erros);
+            return new Promise((resolve, reject) => reject(erros));
         } else {
-            const sql = 'UPDATE tb_atendimentos SET ? WHERE id = ?';
-
-            conexao.query(sql, [atendimento, id], (erro) => {
-                if (erro) {
-                    res.status(400).json(erro);
-                } else {
-                    res.status(200).json({id, ...atendimento});
-                }
-            });
+            return atendimentoRepository.atualizar(id, atendimento);
         }
     }
 
-    deletar(id, res) {
-        const sql = 'DELETE FROM tb_atendimentos WHERE id = ?';
-
-        conexao.query(sql, id, (erro) => {
-            if (erro) {
-                res.status(400).json(erro);
-            } else {
-                res.status(200).json({id});
-            }
-        });
+    deletar(id) {
+        return atendimentoRepository.deletar(id);
     }
 }
 

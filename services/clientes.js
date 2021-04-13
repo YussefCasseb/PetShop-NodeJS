@@ -3,8 +3,6 @@ const faker = require('faker');
 
 const app = new express();
 
-app.use();
-
 app.get('/:cpf', (req, res) => {
     const { cpf } = req.params
 
@@ -15,4 +13,4 @@ app.get('/:cpf', (req, res) => {
     })
 })
 
-app.listen(8082, () => console.log('Api rodando'))
+app.listen(8082)
